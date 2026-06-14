@@ -7,6 +7,5 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-ENV TZ=Asia/Kolkata
 EXPOSE 8080
-ENTRYPOINT ["java", "-Dserver.port=8080", "-Duser.timezone=Asia/Kolkata", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Duser.timezone=Asia/Kolkata", "-jar", "app.jar"]
