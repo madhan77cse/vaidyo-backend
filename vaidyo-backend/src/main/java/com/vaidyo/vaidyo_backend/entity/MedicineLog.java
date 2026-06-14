@@ -1,5 +1,6 @@
 package com.vaidyo.vaidyo_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -13,12 +14,14 @@ public class MedicineLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "medicine_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "patient"})
     private Medicine medicine;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "patient_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "passwordHash", "password"})
     private User patient;
 
     @Enumerated(EnumType.STRING)
@@ -38,10 +41,8 @@ public class MedicineLog {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    // ── Constructors ───────────────────────────────────────────
     public MedicineLog() {}
 
-    // ── Getters ────────────────────────────────────────────────
     public Long getId() { return id; }
     public Medicine getMedicine() { return medicine; }
     public User getPatient() { return patient; }
@@ -51,7 +52,6 @@ public class MedicineLog {
     public String getNotes() { return notes; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
-    // ── Setters ────────────────────────────────────────────────
     public void setId(Long id) { this.id = id; }
     public void setMedicine(Medicine medicine) { this.medicine = medicine; }
     public void setPatient(User patient) { this.patient = patient; }
@@ -60,7 +60,6 @@ public class MedicineLog {
     public void setTakenAt(LocalDateTime takenAt) { this.takenAt = takenAt; }
     public void setNotes(String notes) { this.notes = notes; }
 
-    // ── Enum ───────────────────────────────────────────────────
     public enum LogStatus {
         TAKEN, MISSED, PENDING
     }

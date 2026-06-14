@@ -5,6 +5,7 @@ import com.vaidyo.vaidyo_backend.dto.MedicineResponse;
 import com.vaidyo.vaidyo_backend.entity.MedicineLog;
 import com.vaidyo.vaidyo_backend.service.MedicineService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,7 +28,6 @@ public class MedicineController {
         this.medicineService = medicineService;
     }
 
-    // ── POST /api/patient/medicines ────────────────────────────
     @PostMapping("/medicines")
     public ResponseEntity<?> addMedicine(
             @RequestParam Long patientId,
@@ -41,7 +41,6 @@ public class MedicineController {
         }
     }
 
-    // ── GET /api/patient/medicines ─────────────────────────────
     @GetMapping("/medicines")
     public ResponseEntity<?> getMyMedicines(
             @RequestParam Long patientId) {
@@ -54,7 +53,6 @@ public class MedicineController {
         }
     }
 
-    // ── POST /api/patient/medicines/{id}/taken ─────────────────
     @PostMapping("/medicines/{id}/taken")
     public ResponseEntity<?> markAsTaken(
             @PathVariable Long id,
@@ -68,7 +66,7 @@ public class MedicineController {
         }
     }
 
-    // ── GET /api/patient/medicines/logs ────────────────────────
+    @Transactional
     @GetMapping("/medicines/logs")
     public ResponseEntity<?> getMedicineLogs(
             @RequestParam Long patientId) {
@@ -81,7 +79,6 @@ public class MedicineController {
         }
     }
 
-    // ── DELETE /api/patient/medicines/{id} ─────────────────────
     @DeleteMapping("/medicines/{id}")
     public ResponseEntity<?> deleteMedicine(
             @PathVariable Long id) {
@@ -93,7 +90,6 @@ public class MedicineController {
         }
     }
 
-    // ── POST /api/patient/medicines/{id}/photo ─────────────────
     @PostMapping("/medicines/{id}/photo")
     public ResponseEntity<?> uploadPhoto(
             @PathVariable Long id,

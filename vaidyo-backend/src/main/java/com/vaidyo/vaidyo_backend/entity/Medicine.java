@@ -1,5 +1,6 @@
 package com.vaidyo.vaidyo_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -14,8 +15,9 @@ public class Medicine {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "patient_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "passwordHash", "password"})
     private User patient;
 
     @Column(name = "medicine_name", nullable = false, length = 100)
@@ -44,10 +46,8 @@ public class Medicine {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    // ── Constructors ───────────────────────────────────────────
     public Medicine() {}
 
-    // ── Getters ────────────────────────────────────────────────
     public Long getId() { return id; }
     public User getPatient() { return patient; }
     public String getMedicineName() { return medicineName; }
@@ -59,7 +59,6 @@ public class Medicine {
     public String getNotes() { return notes; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
-    // ── Setters ────────────────────────────────────────────────
     public void setId(Long id) { this.id = id; }
     public void setPatient(User patient) { this.patient = patient; }
     public void setMedicineName(String medicineName) { this.medicineName = medicineName; }
@@ -70,7 +69,6 @@ public class Medicine {
     public void setStatus(MedicineStatus status) { this.status = status; }
     public void setNotes(String notes) { this.notes = notes; }
 
-    // ── Enum ───────────────────────────────────────────────────
     public enum MedicineStatus {
         ACTIVE, INACTIVE
     }

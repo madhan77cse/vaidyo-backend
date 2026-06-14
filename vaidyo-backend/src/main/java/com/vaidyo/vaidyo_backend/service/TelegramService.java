@@ -1,16 +1,20 @@
 package com.vaidyo.vaidyo_backend.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class TelegramService {
 
     @Value("${telegram.bot.token}")
     private String botToken;
-
-    private final RestTemplate restTemplate = new RestTemplate();
 
     private static final String TELEGRAM_API =
             "https://api.telegram.org/bot";
@@ -19,15 +23,26 @@ public class TelegramService {
     public void sendMessage(String chatId, String message) {
         try {
             String url = TELEGRAM_API + botToken
-                    + "/sendMessage"
-                    + "?chat_id=" + chatId
-                    + "&text=" + encodeMessage(message)
-                    + "&parse_mode=HTML";
+                    + "/sendMessage";
 
-            restTemplate.getForObject(url, String.class);
+            RestTemplate rt = new RestTemplate();
+
+            Map<String, String> body = new HashMap<>();
+            body.put("chat_id", chatId);
+            body.put("text", message);
+            body.put("parse_mode", "HTML");
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, String>> entity =
+                    new HttpEntity<>(body, headers);
+
+            rt.postForObject(url, entity, String.class);
 
         } catch (Exception e) {
-            System.err.println("Telegram error: " + e.getMessage());
+            System.err.println("Telegram error: "
+                    + e.getMessage());
         }
     }
 
@@ -41,8 +56,7 @@ public class TelegramService {
                 + "Time to take your medicine:\n\n"
                 + "🔹 <b>" + medicineName + "</b>"
                 + (dosage != null ? " - " + dosage : "")
-                + "\n\n"
-                + "Please confirm in the Vaidyo app "
+                + "\n\nPlease confirm in the Vaidyo app "
                 + "after taking it. ✅";
 
         sendMessage(chatId, message);
@@ -53,8 +67,8 @@ public class TelegramService {
                                 String patientName,
                                 String medicineName) {
         String message = "⚠️ <b>Missed Medicine Alert</b>\n\n"
-                + "Your patient <b>" + patientName + "</b> "
-                + "has missed their medicine:\n\n"
+                + "Your patient <b>" + patientName
+                + "</b> has missed their medicine:\n\n"
                 + "🔴 <b>" + medicineName + "</b>\n\n"
                 + "Please check on them immediately!";
 
@@ -73,15 +87,5 @@ public class TelegramService {
                 + "Stay healthy! 💪";
 
         sendMessage(chatId, message);
-    }
-
-    // ── Helper to encode message for URL ──────────────────────
-    private String encodeMessage(String message) {
-        return message.replace(" ", "%20")
-                .replace("\n", "%0A")
-                .replace("<", "%3C")
-                .replace(">", "%3E")
-                .replace("#", "%23")
-                .replace("&", "%26");
     }
 }

@@ -35,11 +35,17 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        // ── Allow CORS preflight requests ──────────────
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
+                        .permitAll()
                         // ── Public endpoints ───────────────────────────
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
-                                "/api/auth/health"
+                                "/api/auth/health",
+                                "/api/telegram/verify",
+                                "/api/telegram/generate/**",
+                                "/api/telegram/status/**"
                         ).permitAll()
                         // ── Role protected endpoints ───────────────────
                         .requestMatchers("/api/patient/**")

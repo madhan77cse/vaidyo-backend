@@ -153,6 +153,14 @@ public class AuthService {
         response.setMobileNumber(user.getMobileNumber());
         response.setRole(user.getRole());
         response.setMessage(message);
+
+        if (user.getRole() == User.Role.CARETAKER) {
+            caretakerPatientRepository.findByCaretakerId(user.getId())
+                    .stream()
+                    .findFirst()
+                    .ifPresent(link -> response.setPatientId(link.getPatient().getId()));
+        }
+
         return response;
     }
 }

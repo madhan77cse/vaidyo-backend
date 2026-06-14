@@ -10,14 +10,18 @@ import com.vaidyo.vaidyo_backend.repository.MedicineRepository;
 import com.vaidyo.vaidyo_backend.repository.UserRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
 public class MedicineReminderScheduler {
+
+    private static final ZoneId IST = ZoneId.of("Asia/Kolkata");
 
     private final MedicineRepository medicineRepository;
     private final MedicineLogRepository medicineLogRepository;
@@ -39,15 +43,20 @@ public class MedicineReminderScheduler {
     }
 
     // ── Runs every minute ──────────────────────────────────────
+    @Transactional
     @Scheduled(fixedRate = 60000)
     public void sendMedicineReminders() {
 
-        LocalTime now = LocalTime.now()
+        LocalTime now = LocalTime.now(IST)
                 .withSecond(0).withNano(0);
 
-        // Get all active medicines with reminder time = now
+        System.out.println("⏰ Scheduler running at IST: " + now);
+
         List<Medicine> allMedicines =
                 medicineRepository.findAll();
+
+        System.out.println("💊 Total medicines: "
+                + allMedicines.size());
 
         for (Medicine medicine : allMedicines) {
 
@@ -59,11 +68,21 @@ public class MedicineReminderScheduler {
             LocalTime reminderTime = medicine.getReminderTime()
                     .withSecond(0).withNano(0);
 
+            System.out.println("🔔 Checking: "
+                    + medicine.getMedicineName()
+                    + " reminderTime: " + reminderTime
+                    + " now IST: " + now
+                    + " match: " + reminderTime.equals(now));
+
             if (!reminderTime.equals(now)) continue;
 
             User patient = medicine.getPatient();
 
-            // Send reminder if patient has telegram linked
+            System.out.println("👤 Patient: "
+                    + patient.getFullName()
+                    + " telegramId: "
+                    + patient.getTelegramChatId());
+
             if (patient.getTelegramChatId() != null) {
                 telegramService.sendMedicineReminder(
                         patient.getTelegramChatId(),
@@ -71,12 +90,16 @@ public class MedicineReminderScheduler {
                         medicine.getMedicineName(),
                         medicine.getDosage()
                 );
+                System.out.println("✅ Reminder sent to: "
+                        + patient.getFullName());
+            } else {
+                System.out.println("❌ No telegram linked for: "
+                        + patient.getFullName());
             }
 
-            // Create PENDING log
             LocalDateTime scheduledTime =
-                    LocalDateTime.of(LocalDate.now(),
-                            medicine.getReminderTime());
+                    LocalDateTime.now(IST)
+                            .withSecond(0).withNano(0);
 
             MedicineLog log = new MedicineLog();
             log.setMedicine(medicine);
@@ -92,15 +115,8 @@ public class MedicineReminderScheduler {
     public void checkMissedMedicines() {
 
         LocalDateTime thirtyMinsAgo =
-                LocalDateTime.now().minusMinutes(30);
+                LocalDateTime.now(IST).minusMinutes(30);
 
-        List<MedicineLog> pendingLogs =
-                medicineLogRepository
-                        .findByPatientIdAndStatus(
-                                null,
-                                MedicineLog.LogStatus.PENDING);
-
-        // We need all PENDING logs
         List<MedicineLog> allPending =
                 medicineLogRepository.findAll()
                         .stream()
@@ -112,11 +128,9 @@ public class MedicineReminderScheduler {
 
         for (MedicineLog log : allPending) {
 
-            // Mark as MISSED
             log.setStatus(MedicineLog.LogStatus.MISSED);
             medicineLogRepository.save(log);
 
-            // Alert caretakers
             User patient = log.getPatient();
             List<CaretakerPatient> caretakers =
                     caretakerPatientRepository

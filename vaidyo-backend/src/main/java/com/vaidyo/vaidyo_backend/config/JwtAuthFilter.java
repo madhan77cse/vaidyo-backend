@@ -33,45 +33,62 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. Get Authorization header
-        final String authHeader = request.getHeader("Authorization");
+        final String authHeader =
+                request.getHeader("Authorization");
 
-        // 2. If no token, skip to next filter
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        System.out.println("🔐 Auth header: " + authHeader);
+
+        if (authHeader == null ||
+                !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 3. Extract token and username
         final String jwt = authHeader.substring(7);
-        final String mobileNumber = jwtUtil.extractUsername(jwt);
+        System.out.println("🎫 Token starts: "
+                + jwt.substring(0, 20) + "...");
 
-        // 4. If username found and not already authenticated
-        if (mobileNumber != null &&
-                SecurityContextHolder.getContext().getAuthentication() == null) {
+        try {
+            final String mobileNumber =
+                    jwtUtil.extractUsername(jwt);
+            System.out.println("📱 Mobile: " + mobileNumber);
 
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(mobileNumber);
+            if (mobileNumber != null &&
+                    SecurityContextHolder.getContext()
+                            .getAuthentication() == null) {
 
-            // 5. Validate token
-            if (jwtUtil.isTokenValid(jwt, userDetails)) {
+                UserDetails userDetails =
+                        userDetailsService
+                                .loadUserByUsername(mobileNumber);
 
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
+                System.out.println("👤 User: "
+                        + userDetails.getUsername());
+                System.out.println("🎭 Authorities: "
+                        + userDetails.getAuthorities());
 
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource()
-                                .buildDetails(request)
-                );
+                if (jwtUtil.isTokenValid(jwt, userDetails)) {
+                    System.out.println("✅ Token valid!");
 
-                // 6. Set authentication in context
-                SecurityContextHolder.getContext()
-                        .setAuthentication(authToken);
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request)
+                    );
+
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(authToken);
+                } else {
+                    System.out.println("❌ Token invalid!");
+                }
             }
+        } catch (Exception e) {
+            System.out.println("💥 Error: " + e.getMessage());
         }
 
         filterChain.doFilter(request, response);

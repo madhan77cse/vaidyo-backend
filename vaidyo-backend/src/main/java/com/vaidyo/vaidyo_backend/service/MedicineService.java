@@ -9,6 +9,7 @@ import com.vaidyo.vaidyo_backend.repository.MedicineLogRepository;
 import com.vaidyo.vaidyo_backend.repository.MedicineRepository;
 import com.vaidyo.vaidyo_backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
 import java.time.LocalDateTime;
@@ -87,9 +88,20 @@ public class MedicineService {
         return "Medicine marked as taken!";
     }
 
-    // ── Get Medicine Logs ──────────────────────────────────────
+    @Transactional
     public List<MedicineLog> getMedicineLogs(Long patientId) {
-        return medicineLogRepository.findByPatientId(patientId);
+        List<MedicineLog> logs = medicineLogRepository
+                .findByPatientId(patientId);
+        // Force load lazy references
+        logs.forEach(log -> {
+            if (log.getMedicine() != null) {
+                log.getMedicine().getMedicineName();
+            }
+            if (log.getPatient() != null) {
+                log.getPatient().getFullName();
+            }
+        });
+        return logs;
     }
 
     // ── Delete Medicine ────────────────────────────────────────

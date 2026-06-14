@@ -11,6 +11,7 @@ public class AuthResponse {
     private String mobileNumber;
     private User.Role role;
     private String message;
+    private Long patientId;
 
     // ── Getters ────────────────────────────────────────────────
     public String getToken() { return token; }
@@ -20,6 +21,7 @@ public class AuthResponse {
     public String getMobileNumber() { return mobileNumber; }
     public User.Role getRole() { return role; }
     public String getMessage() { return message; }
+    public Long getPatientId() { return patientId; }
 
     // ── Setters ────────────────────────────────────────────────
     public void setToken(String token) { this.token = token; }
@@ -29,4 +31,5 @@ public class AuthResponse {
     public void setMobileNumber(String mobileNumber) { this.mobileNumber = mobileNumber; }
     public void setRole(User.Role role) { this.role = role; }
     public void setMessage(String message) { this.message = message; }
+    public void setPatientId(Long patientId) { this.patientId = patientId; }
 }

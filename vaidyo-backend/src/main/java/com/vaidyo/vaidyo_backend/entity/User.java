@@ -1,5 +1,6 @@
 package com.vaidyo.vaidyo_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -22,6 +23,7 @@ public class User {
     @Column(name = "mobile_number", nullable = false, unique = true, length = 15)
     private String mobileNumber;
 
+    @JsonIgnore
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
@@ -47,7 +49,6 @@ public class User {
     @Column(name = "telegram_chat_id", length = 50)
     private String telegramChatId;
 
-    // ── Constructors ───────────────────────────────────────────
     public User() {}
 
     public User(String mobileNumber, String passwordHash,
@@ -59,7 +60,6 @@ public class User {
         this.status = UserStatus.ACTIVE;
     }
 
-    // ── Getters ────────────────────────────────────────────────
     public Long getId() { return id; }
     public String getMobileNumber() { return mobileNumber; }
     public String getPasswordHash() { return passwordHash; }
@@ -70,18 +70,14 @@ public class User {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public String getTelegramChatId() { return telegramChatId; }
 
-    // ── Setters ────────────────────────────────────────────────
     public void setId(Long id) { this.id = id; }
     public void setMobileNumber(String mobileNumber) { this.mobileNumber = mobileNumber; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public void setFullName(String fullName) { this.fullName = fullName; }
     public void setRole(Role role) { this.role = role; }
     public void setStatus(UserStatus status) { this.status = status; }
-    public void setTelegramChatId(String telegramChatId) {
-        this.telegramChatId = telegramChatId;
-    }
+    public void setTelegramChatId(String telegramChatId) { this.telegramChatId = telegramChatId; }
 
-    // ── Enums ──────────────────────────────────────────────────
     public enum Role {
         PATIENT, CARETAKER, DOCTOR
     }
