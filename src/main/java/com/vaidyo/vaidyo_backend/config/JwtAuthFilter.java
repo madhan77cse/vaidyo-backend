@@ -1,5 +1,7 @@
 package com.vaidyo.vaidyo_backend.config;
 
+import com.vaidyo.vaidyo_backend.entity.Admin;
+import com.vaidyo.vaidyo_backend.repository.AdminRepository;
 import com.vaidyo.vaidyo_backend.service.UserDetailsServiceImpl;
 import com.vaidyo.vaidyo_backend.util.JwtUtil;
 import jakarta.servlet.FilterChain;
@@ -20,11 +22,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsServiceImpl userDetailsService;
+    private final AdminRepository adminRepository;
 
     public JwtAuthFilter(JwtUtil jwtUtil,
-                         UserDetailsServiceImpl userDetailsService) {
+                         UserDetailsServiceImpl userDetailsService,
+                         AdminRepository adminRepository) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+        this.adminRepository = adminRepository;
     }
 
     @Override
@@ -49,17 +54,41 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 + jwt.substring(0, 20) + "...");
 
         try {
-            final String mobileNumber =
+            final String username =
                     jwtUtil.extractUsername(jwt);
-            System.out.println("📱 Mobile: " + mobileNumber);
+            System.out.println("👤 Username: " + username);
 
-            if (mobileNumber != null &&
+            // ── Extract role from JWT to decide which table ──
+            final String role = jwtUtil.extractRole(jwt);
+            System.out.println("🎭 Role from token: " + role);
+
+            if (username != null &&
                     SecurityContextHolder.getContext()
                             .getAuthentication() == null) {
 
-                UserDetails userDetails =
-                        userDetailsService
-                                .loadUserByUsername(mobileNumber);
+                UserDetails userDetails;
+
+                // ── Admin token → load from admins table ─────
+                if ("ADMIN".equals(role)) {
+                    Admin admin = adminRepository
+                            .findByUsername(username)
+                            .orElseThrow(() ->
+                                    new RuntimeException(
+                                            "Admin not found: "
+                                                    + username));
+
+                    userDetails = org.springframework.security
+                            .core.userdetails.User
+                            .withUsername(admin.getUsername())
+                            .password(admin.getPasswordHash())
+                            .roles("ADMIN")
+                            .build();
+
+                } else {
+                    // ── Patient/Doctor/Caretaker/Nurse token ──
+                    userDetails = userDetailsService
+                            .loadUserByUsername(username);
+                }
 
                 System.out.println("👤 User: "
                         + userDetails.getUsername());

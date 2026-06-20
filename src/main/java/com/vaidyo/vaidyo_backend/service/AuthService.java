@@ -63,6 +63,12 @@ public class AuthService {
                 request.getFullName(),
                 request.getRole()
         );
+
+        // Set preferred language (defaults to "en" if not provided)
+        if (request.getPreferredLanguage() != null && !request.getPreferredLanguage().isBlank()) {
+            user.setPreferredLanguage(request.getPreferredLanguage());
+        }
+
         userRepository.save(user);
 
         // 3. Create role-specific profile
@@ -153,6 +159,7 @@ public class AuthService {
         response.setMobileNumber(user.getMobileNumber());
         response.setRole(user.getRole());
         response.setMessage(message);
+        response.setPreferredLanguage(user.getPreferredLanguage());
 
         if (user.getRole() == User.Role.CARETAKER) {
             caretakerPatientRepository.findByCaretakerId(user.getId())

@@ -15,10 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
 public class MedicineReminderScheduler {
+
+    private static final ZoneId IST = ZoneId.of("Asia/Kolkata");
 
     private final MedicineRepository medicineRepository;
     private final MedicineLogRepository medicineLogRepository;
@@ -44,10 +47,10 @@ public class MedicineReminderScheduler {
     @Scheduled(fixedRate = 60000)
     public void sendMedicineReminders() {
 
-        LocalTime now = LocalTime.now()
+        LocalTime now = LocalTime.now(IST)
                 .withSecond(0).withNano(0);
 
-        System.out.println("⏰ Scheduler running at: " + now);
+        System.out.println("⏰ Scheduler running at IST: " + now);
 
         List<Medicine> allMedicines =
                 medicineRepository.findAll();
@@ -68,7 +71,7 @@ public class MedicineReminderScheduler {
             System.out.println("🔔 Checking: "
                     + medicine.getMedicineName()
                     + " reminderTime: " + reminderTime
-                    + " now: " + now
+                    + " now IST: " + now
                     + " match: " + reminderTime.equals(now));
 
             if (!reminderTime.equals(now)) continue;
@@ -90,12 +93,13 @@ public class MedicineReminderScheduler {
                 System.out.println("✅ Reminder sent to: "
                         + patient.getFullName());
             } else {
-                System.out.println("❌ No telegram linked!");
+                System.out.println("❌ No telegram linked for: "
+                        + patient.getFullName());
             }
 
             LocalDateTime scheduledTime =
-                    LocalDateTime.of(LocalDate.now(),
-                            medicine.getReminderTime());
+                    LocalDateTime.now(IST)
+                            .withSecond(0).withNano(0);
 
             MedicineLog log = new MedicineLog();
             log.setMedicine(medicine);
@@ -111,7 +115,7 @@ public class MedicineReminderScheduler {
     public void checkMissedMedicines() {
 
         LocalDateTime thirtyMinsAgo =
-                LocalDateTime.now().minusMinutes(30);
+                LocalDateTime.now(IST).minusMinutes(30);
 
         List<MedicineLog> allPending =
                 medicineLogRepository.findAll()

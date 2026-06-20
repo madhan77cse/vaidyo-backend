@@ -12,4 +12,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByMobileNumber(String mobileNumber);
 
     boolean existsByMobileNumber(String mobileNumber);
+
+    // ── New ──────────────────────────────────────────────────
+    long countByRole(User.Role role);
 }
