@@ -12,6 +12,7 @@ public class AuthResponse {
     private User.Role role;
     private String message;
     private Long patientId;
+    private String preferredLanguage;
 
     // ── Getters ────────────────────────────────────────────────
     public String getToken() { return token; }
@@ -22,6 +23,7 @@ public class AuthResponse {
     public User.Role getRole() { return role; }
     public String getMessage() { return message; }
     public Long getPatientId() { return patientId; }
+    public String getPreferredLanguage() { return preferredLanguage; }
 
     // ── Setters ────────────────────────────────────────────────
     public void setToken(String token) { this.token = token; }
@@ -32,4 +34,5 @@ public class AuthResponse {
     public void setRole(User.Role role) { this.role = role; }
     public void setMessage(String message) { this.message = message; }
     public void setPatientId(Long patientId) { this.patientId = patientId; }
+    public void setPreferredLanguage(String preferredLanguage) { this.preferredLanguage = preferredLanguage; }
 }

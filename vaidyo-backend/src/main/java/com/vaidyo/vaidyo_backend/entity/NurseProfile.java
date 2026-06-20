@@ -7,8 +7,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "doctor_profiles")
-public class DoctorProfile {
+@Table(name = "nurse_profiles")
+public class NurseProfile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,12 +19,11 @@ public class DoctorProfile {
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "passwordHash", "password"})
     private User user;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "speciality", nullable = false, length = 50)
-    private Speciality speciality;
+    @Column(name = "nursing_council_reg_number", nullable = false, unique = true, length = 50)
+    private String nursingCouncilRegNumber;
 
-    @Column(name = "license_number", nullable = false, unique = true, length = 50)
-    private String licenseNumber;
+    @Column(name = "id_document_url", nullable = false, length = 255)
+    private String idDocumentUrl;
 
     @Column(name = "experience_years")
     private Integer experienceYears;
@@ -32,8 +31,8 @@ public class DoctorProfile {
     @Column(name = "consultation_fee")
     private Double consultationFee;
 
-    @Column(name = "clinic_address", columnDefinition = "TEXT")
-    private String clinicAddress;
+    @Column(name = "service_address", columnDefinition = "TEXT")
+    private String serviceAddress;
 
     @Column(name = "bio", columnDefinition = "TEXT")
     private String bio;
@@ -42,52 +41,39 @@ public class DoctorProfile {
     @Column(name = "verification_status", length = 20)
     private VerificationStatus verificationStatus = VerificationStatus.PENDING;
 
-    // ── New fields ──────────────────────────────────────────────
-    @Column(name = "certificate_url", columnDefinition = "TEXT")
-    private String certificateUrl;
-
     @Column(name = "rejection_reason", columnDefinition = "TEXT")
     private String rejectionReason;
-    // ───────────────────────────────────────────────────────────
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    public DoctorProfile() {}
+    public NurseProfile() {}
 
     public Long getId() { return id; }
     public User getUser() { return user; }
-    public Speciality getSpeciality() { return speciality; }
-    public String getLicenseNumber() { return licenseNumber; }
+    public String getNursingCouncilRegNumber() { return nursingCouncilRegNumber; }
+    public String getIdDocumentUrl() { return idDocumentUrl; }
     public Integer getExperienceYears() { return experienceYears; }
     public Double getConsultationFee() { return consultationFee; }
-    public String getClinicAddress() { return clinicAddress; }
+    public String getServiceAddress() { return serviceAddress; }
     public String getBio() { return bio; }
     public VerificationStatus getVerificationStatus() { return verificationStatus; }
-    public String getCertificateUrl() { return certificateUrl; }
     public String getRejectionReason() { return rejectionReason; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
     public void setId(Long id) { this.id = id; }
     public void setUser(User user) { this.user = user; }
-    public void setSpeciality(Speciality speciality) { this.speciality = speciality; }
-    public void setLicenseNumber(String licenseNumber) { this.licenseNumber = licenseNumber; }
+    public void setNursingCouncilRegNumber(String nursingCouncilRegNumber) { this.nursingCouncilRegNumber = nursingCouncilRegNumber; }
+    public void setIdDocumentUrl(String idDocumentUrl) { this.idDocumentUrl = idDocumentUrl; }
     public void setExperienceYears(Integer experienceYears) { this.experienceYears = experienceYears; }
     public void setConsultationFee(Double consultationFee) { this.consultationFee = consultationFee; }
-    public void setClinicAddress(String clinicAddress) { this.clinicAddress = clinicAddress; }
+    public void setServiceAddress(String serviceAddress) { this.serviceAddress = serviceAddress; }
     public void setBio(String bio) { this.bio = bio; }
     public void setVerificationStatus(VerificationStatus verificationStatus) { this.verificationStatus = verificationStatus; }
-    public void setCertificateUrl(String certificateUrl) { this.certificateUrl = certificateUrl; }
     public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
 
-    public enum Speciality {
-        GENERAL, CARDIOLOGY, ORTHOPEDICS, DIABETOLOGY,
-        NEUROLOGY, DERMATOLOGY, ENT, OPHTHALMOLOGY,
-        GYNECOLOGY, PEDIATRICS, PSYCHIATRY, UROLOGY
-    }
-
     public enum VerificationStatus {
-        PENDING, VERIFIED, REJECTED
+        PENDING, APPROVED, REJECTED
     }
 }

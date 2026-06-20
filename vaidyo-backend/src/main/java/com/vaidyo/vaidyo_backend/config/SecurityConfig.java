@@ -3,10 +3,12 @@ package com.vaidyo.vaidyo_backend.config;
 import com.vaidyo.vaidyo_backend.service.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -17,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity  // ← enables @PreAuthorize on controllers
 public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
@@ -28,17 +31,53 @@ public class SecurityConfig {
         this.jwtAuthFilter = jwtAuthFilter;
     }
 
+    // ── Admin filter chain (higher priority) ───────────────────
     @Bean
+    @Order(1)
+    public SecurityFilterChain adminFilterChain(HttpSecurity http)
+            throws Exception {
+
+        http
+                .securityMatcher("/api/admin/**")
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.OPTIONS,
+                                "/**"
+                        ).permitAll()
+                        // admin login is public
+                        .requestMatchers(
+                                "/api/admin/auth/login",
+                                "/api/admin/auth/health"
+                        ).permitAll()
+                        // everything else under /api/admin/** needs ADMIN role
+                        .anyRequest().hasRole("ADMIN")
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthFilter,
+                        UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    // ── Patient/Doctor/Caretaker/Nurse filter chain ────────────
+    @Bean
+    @Order(2)
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // ── Allow CORS preflight requests ──────────────
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
-                        .permitAll()
-                        // ── Public endpoints ───────────────────────────
+                        // ── Allow CORS preflight requests ──────
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.OPTIONS,
+                                "/**"
+                        ).permitAll()
+                        // ── Public endpoints ───────────────────
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
@@ -47,14 +86,16 @@ public class SecurityConfig {
                                 "/api/telegram/generate/**",
                                 "/api/telegram/status/**"
                         ).permitAll()
-                        // ── Role protected endpoints ───────────────────
+                        // ── Role protected endpoints ───────────
                         .requestMatchers("/api/patient/**")
                         .hasRole("PATIENT")
                         .requestMatchers("/api/doctor/**")
                         .hasRole("DOCTOR")
                         .requestMatchers("/api/caretaker/**")
                         .hasRole("CARETAKER")
-                        // ── Everything else needs login ────────────────
+                        .requestMatchers("/api/nurse/**")
+                        .hasRole("NURSE")
+                        // ── Everything else needs login ─────────
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -74,7 +115,8 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        DaoAuthenticationProvider provider =
+                new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
