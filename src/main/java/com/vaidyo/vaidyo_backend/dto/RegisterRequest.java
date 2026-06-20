@@ -9,6 +9,7 @@ public class RegisterRequest {
     private String password;
     private String fullName;
     private User.Role role;
+    private String preferredLanguage; // "en", "hi", "ta", etc.
 
     // Patient fields
     private Integer age;
@@ -30,6 +31,7 @@ public class RegisterRequest {
     public String getPassword() { return password; }
     public String getFullName() { return fullName; }
     public User.Role getRole() { return role; }
+    public String getPreferredLanguage() { return preferredLanguage; }
     public Integer getAge() { return age; }
     public String getBloodGroup() { return bloodGroup; }
     public String getAddress() { return address; }
@@ -45,6 +47,7 @@ public class RegisterRequest {
     public void setPassword(String password) { this.password = password; }
     public void setFullName(String fullName) { this.fullName = fullName; }
     public void setRole(User.Role role) { this.role = role; }
+    public void setPreferredLanguage(String preferredLanguage) { this.preferredLanguage = preferredLanguage; }
     public void setAge(Integer age) { this.age = age; }
     public void setBloodGroup(String bloodGroup) { this.bloodGroup = bloodGroup; }
     public void setAddress(String address) { this.address = address; }

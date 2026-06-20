@@ -49,6 +49,9 @@ public class User {
     @Column(name = "telegram_chat_id", length = 50)
     private String telegramChatId;
 
+    @Column(name = "preferred_language", length = 10)
+    private String preferredLanguage = "en";
+
     public User() {}
 
     public User(String mobileNumber, String passwordHash,
@@ -69,6 +72,7 @@ public class User {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public String getTelegramChatId() { return telegramChatId; }
+    public String getPreferredLanguage() { return preferredLanguage; }
 
     public void setId(Long id) { this.id = id; }
     public void setMobileNumber(String mobileNumber) { this.mobileNumber = mobileNumber; }
@@ -77,9 +81,10 @@ public class User {
     public void setRole(Role role) { this.role = role; }
     public void setStatus(UserStatus status) { this.status = status; }
     public void setTelegramChatId(String telegramChatId) { this.telegramChatId = telegramChatId; }
+    public void setPreferredLanguage(String preferredLanguage) { this.preferredLanguage = preferredLanguage; }
 
     public enum Role {
-        PATIENT, CARETAKER, DOCTOR
+        PATIENT, CARETAKER, DOCTOR, ADMIN, NURSE
     }
 
     public enum UserStatus {
