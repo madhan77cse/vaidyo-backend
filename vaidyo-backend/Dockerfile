@@ -8,8 +8,4 @@ FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-<<<<<<< HEAD
 ENTRYPOINT ["java", "-Duser.timezone=Asia/Kolkata", "-jar", "app.jar"]
-=======
-ENTRYPOINT ["java", "-jar", "app.jar"]
->>>>>>> 4ac5b8e44dccfee75c4445a0e82e3fa4d526c6f8
