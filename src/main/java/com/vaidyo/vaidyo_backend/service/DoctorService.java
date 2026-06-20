@@ -162,14 +162,6 @@ public class DoctorService {
 
     // ── Map to verification response ───────────────────────────
     private DoctorVerificationResponse mapToVerificationResponse(DoctorProfile profile) {
-        DoctorVerificationResponse response = new DoctorVerificationResponse();
-        response.setUserId(profile.getUser().getId());
-        response.setFullName(profile.getUser().getFullName());
-        response.setSpeciality(profile.getSpeciality().name());
-        response.setLicenseNumber(profile.getLicenseNumber());
-        response.setVerificationStatus(profile.getVerificationStatus().name());
-        response.setCertificateUrl(profile.getCertificateUrl());
-        response.setRejectionReason(profile.getRejectionReason());
-        return response;
+        return DoctorVerificationResponse.from(profile);
     }
 }
