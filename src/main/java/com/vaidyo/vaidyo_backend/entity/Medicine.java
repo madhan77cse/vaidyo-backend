@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
 
@@ -35,6 +36,9 @@ public class Medicine {
     @Column(name = "photo_url", length = 255)
     private String photoUrl;
 
+    @Column(name = "expiry_date")
+    private LocalDate expiryDate;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20)
     private MedicineStatus status = MedicineStatus.ACTIVE;
@@ -55,6 +59,7 @@ public class Medicine {
     public String getFrequency() { return frequency; }
     public LocalTime getReminderTime() { return reminderTime; }
     public String getPhotoUrl() { return photoUrl; }
+    public LocalDate getExpiryDate() { return expiryDate; }
     public MedicineStatus getStatus() { return status; }
     public String getNotes() { return notes; }
     public LocalDateTime getCreatedAt() { return createdAt; }
@@ -66,6 +71,7 @@ public class Medicine {
     public void setFrequency(String frequency) { this.frequency = frequency; }
     public void setReminderTime(LocalTime reminderTime) { this.reminderTime = reminderTime; }
     public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
+    public void setExpiryDate(LocalDate expiryDate) { this.expiryDate = expiryDate; }
     public void setStatus(MedicineStatus status) { this.status = status; }
     public void setNotes(String notes) { this.notes = notes; }
 

@@ -31,12 +31,9 @@ public class MedicineService {
         this.userRepository = userRepository;
     }
 
-    // ── Add Medicine ───────────────────────────────────────────
-    public MedicineResponse addMedicine(Long patientId,
-                                        MedicineRequest request) {
+    public MedicineResponse addMedicine(Long patientId, MedicineRequest request) {
         User patient = userRepository.findById(patientId)
-                .orElseThrow(() ->
-                        new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new RuntimeException("Patient not found"));
 
         Medicine medicine = new Medicine();
         medicine.setPatient(patient);
@@ -44,38 +41,30 @@ public class MedicineService {
         medicine.setDosage(request.getDosage());
         medicine.setFrequency(request.getFrequency());
         medicine.setNotes(request.getNotes());
+        medicine.setExpiryDate(request.getExpiryDate());
 
-        if (request.getReminderTime() != null
-                && !request.getReminderTime().isEmpty()) {
-            medicine.setReminderTime(
-                    LocalTime.parse(request.getReminderTime()));
+        if (request.getReminderTime() != null && !request.getReminderTime().isEmpty()) {
+            medicine.setReminderTime(LocalTime.parse(request.getReminderTime()));
         }
 
         medicineRepository.save(medicine);
         return mapToResponse(medicine);
     }
 
-    // ── Get All Medicines for Patient ──────────────────────────
     public List<MedicineResponse> getMyMedicines(Long patientId) {
         return medicineRepository
-                .findByPatientIdAndStatus(
-                        patientId,
-                        Medicine.MedicineStatus.ACTIVE)
+                .findByPatientIdAndStatus(patientId, Medicine.MedicineStatus.ACTIVE)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
-    // ── Mark Medicine as Taken ─────────────────────────────────
     public String markAsTaken(Long medicineId, Long patientId) {
-        Medicine medicine = medicineRepository
-                .findById(medicineId)
-                .orElseThrow(() ->
-                        new RuntimeException("Medicine not found"));
+        Medicine medicine = medicineRepository.findById(medicineId)
+                .orElseThrow(() -> new RuntimeException("Medicine not found"));
 
         User patient = userRepository.findById(patientId)
-                .orElseThrow(() ->
-                        new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new RuntimeException("Patient not found"));
 
         MedicineLog log = new MedicineLog();
         log.setMedicine(medicine);
@@ -90,43 +79,29 @@ public class MedicineService {
 
     @Transactional
     public List<MedicineLog> getMedicineLogs(Long patientId) {
-        List<MedicineLog> logs = medicineLogRepository
-                .findByPatientId(patientId);
-        // Force load lazy references
+        List<MedicineLog> logs = medicineLogRepository.findByPatientId(patientId);
         logs.forEach(log -> {
-            if (log.getMedicine() != null) {
-                log.getMedicine().getMedicineName();
-            }
-            if (log.getPatient() != null) {
-                log.getPatient().getFullName();
-            }
+            if (log.getMedicine() != null) log.getMedicine().getMedicineName();
+            if (log.getPatient() != null) log.getPatient().getFullName();
         });
         return logs;
     }
 
-    // ── Delete Medicine ────────────────────────────────────────
     public String deleteMedicine(Long medicineId) {
-        Medicine medicine = medicineRepository
-                .findById(medicineId)
-                .orElseThrow(() ->
-                        new RuntimeException("Medicine not found"));
-
+        Medicine medicine = medicineRepository.findById(medicineId)
+                .orElseThrow(() -> new RuntimeException("Medicine not found"));
         medicine.setStatus(Medicine.MedicineStatus.INACTIVE);
         medicineRepository.save(medicine);
         return "Medicine removed successfully!";
     }
 
-    // ── Update Photo URL ───────────────────────────────────────
     public void updatePhotoUrl(Long medicineId, String photoUrl) {
-        Medicine medicine = medicineRepository
-                .findById(medicineId)
-                .orElseThrow(() ->
-                        new RuntimeException("Medicine not found"));
+        Medicine medicine = medicineRepository.findById(medicineId)
+                .orElseThrow(() -> new RuntimeException("Medicine not found"));
         medicine.setPhotoUrl(photoUrl);
         medicineRepository.save(medicine);
     }
 
-    // ── Helper: Map entity to response ────────────────────────
     public MedicineResponse mapToResponse(Medicine medicine) {
         MedicineResponse response = new MedicineResponse();
         response.setId(medicine.getId());
@@ -135,6 +110,7 @@ public class MedicineService {
         response.setFrequency(medicine.getFrequency());
         response.setReminderTime(medicine.getReminderTime());
         response.setPhotoUrl(medicine.getPhotoUrl());
+        response.setExpiryDate(medicine.getExpiryDate());
         response.setStatus(medicine.getStatus().name());
         response.setNotes(medicine.getNotes());
         response.setCreatedAt(medicine.getCreatedAt());
