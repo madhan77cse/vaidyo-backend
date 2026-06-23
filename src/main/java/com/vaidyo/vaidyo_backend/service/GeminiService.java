@@ -2,7 +2,8 @@ package com.vaidyo.vaidyo_backend.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.*;
 
 import java.util.List;
 import java.util.Map;
@@ -10,43 +11,39 @@ import java.util.Map;
 @Service
 public class GeminiService {
 
-    @Value("${gemini.api.key}")
+    @Value("${groq.api.key}")
     private String apiKey;
 
-    private final WebClient webClient;
+    private final RestTemplate restTemplate = new RestTemplate();
 
-    public GeminiService(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder
-                .baseUrl("https://generativelanguage.googleapis.com")
-                .build();
-    }
+    private static final String GROQ_URL =
+            "https://api.groq.com/openai/v1/chat/completions";
 
     public String generateContent(String prompt) {
-        Map<String, Object> requestBody = Map.of(
-                "contents", List.of(
-                        Map.of("parts", List.of(
-                                Map.of("text", prompt)
-                        ))
-                )
-        );
-
         try {
-            Map response = webClient.post()
-                    .uri("/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey)
-                    .header("Content-Type", "application/json")
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
+            Map<String, Object> requestBody = Map.of(
+                    "model", "llama-3.3-70b-versatile",
+                    "messages", List.of(
+                            Map.of("role", "user", "content", prompt)
+                    )
+            );
 
-            List candidates = (List) response.get("candidates");
-            Map firstCandidate = (Map) candidates.get(0);
-            Map content = (Map) firstCandidate.get("content");
-            List parts = (List) content.get("parts");
-            Map firstPart = (Map) parts.get(0);
-            return (String) firstPart.get("text");
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(apiKey);
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(GROQ_URL, entity, Map.class);
+
+            Map body = response.getBody();
+            List choices = (List) body.get("choices");
+            Map firstChoice = (Map) choices.get(0);
+            Map message = (Map) firstChoice.get("message");
+            return (String) message.get("content");
 
         } catch (Exception e) {
+            System.out.println("GROQ ERROR: " + e.getMessage());
             return "Sorry, I was unable to process your request at this time. Please try again later.";
         }
     }
