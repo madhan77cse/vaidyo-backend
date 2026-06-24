@@ -1,7 +1,6 @@
 package com.vaidyo.vaidyo_backend.controller;
 
 import com.vaidyo.vaidyo_backend.dto.MedicineRequest;
-import com.vaidyo.vaidyo_backend.dto.MedicineResponse;
 import com.vaidyo.vaidyo_backend.entity.MedicineLog;
 import com.vaidyo.vaidyo_backend.service.MedicineService;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -33,7 +33,7 @@ public class MedicineController {
             @RequestParam Long patientId,
             @RequestBody MedicineRequest request) {
         try {
-            MedicineResponse response =
+            Map<String, Object> response =
                     medicineService.addMedicine(patientId, request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -45,9 +45,8 @@ public class MedicineController {
     public ResponseEntity<?> getMyMedicines(
             @RequestParam Long patientId) {
         try {
-            List<MedicineResponse> medicines =
-                    medicineService.getMyMedicines(patientId);
-            return ResponseEntity.ok(medicines);
+            return ResponseEntity.ok(
+                    medicineService.getMyMedicines(patientId));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -58,8 +57,7 @@ public class MedicineController {
             @PathVariable Long id,
             @RequestParam Long patientId) {
         try {
-            String result =
-                    medicineService.markAsTaken(id, patientId);
+            String result = medicineService.markAsTaken(id, patientId);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

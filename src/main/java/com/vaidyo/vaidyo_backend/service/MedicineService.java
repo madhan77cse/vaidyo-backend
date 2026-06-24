@@ -1,10 +1,13 @@
 package com.vaidyo.vaidyo_backend.service;
 
+import com.vaidyo.vaidyo_backend.dto.MedicineInteractionResponse;
 import com.vaidyo.vaidyo_backend.dto.MedicineRequest;
 import com.vaidyo.vaidyo_backend.dto.MedicineResponse;
 import com.vaidyo.vaidyo_backend.entity.Medicine;
+import com.vaidyo.vaidyo_backend.entity.MedicineInteraction;
 import com.vaidyo.vaidyo_backend.entity.MedicineLog;
 import com.vaidyo.vaidyo_backend.entity.User;
+import com.vaidyo.vaidyo_backend.repository.MedicineInteractionRepository;
 import com.vaidyo.vaidyo_backend.repository.MedicineLogRepository;
 import com.vaidyo.vaidyo_backend.repository.MedicineRepository;
 import com.vaidyo.vaidyo_backend.repository.UserRepository;
@@ -13,7 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,16 +27,19 @@ public class MedicineService {
     private final MedicineRepository medicineRepository;
     private final MedicineLogRepository medicineLogRepository;
     private final UserRepository userRepository;
+    private final MedicineInteractionRepository interactionRepository;
 
     public MedicineService(MedicineRepository medicineRepository,
                            MedicineLogRepository medicineLogRepository,
-                           UserRepository userRepository) {
+                           UserRepository userRepository,
+                           MedicineInteractionRepository interactionRepository) {
         this.medicineRepository = medicineRepository;
         this.medicineLogRepository = medicineLogRepository;
         this.userRepository = userRepository;
+        this.interactionRepository = interactionRepository;
     }
 
-    public MedicineResponse addMedicine(Long patientId, MedicineRequest request) {
+    public Map<String, Object> addMedicine(Long patientId, MedicineRequest request) {
         User patient = userRepository.findById(patientId)
                 .orElseThrow(() -> new RuntimeException("Patient not found"));
 
@@ -48,7 +56,37 @@ public class MedicineService {
         }
 
         medicineRepository.save(medicine);
-        return mapToResponse(medicine);
+
+        // ── Check interactions with existing medicines ─────────
+        List<Medicine> existingMedicines = medicineRepository
+                .findByPatientIdAndStatus(patientId, Medicine.MedicineStatus.ACTIVE);
+
+        List<MedicineInteractionResponse> warnings = new ArrayList<>();
+
+        for (Medicine existing : existingMedicines) {
+            if (existing.getId().equals(medicine.getId())) continue;
+
+            List<MedicineInteraction> found = interactionRepository
+                    .findInteraction(request.getMedicineName(),
+                            existing.getMedicineName());
+
+            for (MedicineInteraction interaction : found) {
+                warnings.add(new MedicineInteractionResponse(
+                        request.getMedicineName(),
+                        existing.getMedicineName(),
+                        interaction.getDescription(),
+                        interaction.getSeverity()
+                ));
+            }
+        }
+
+        MedicineResponse medicineResponse = mapToResponse(medicine);
+
+        return Map.of(
+                "medicine", medicineResponse,
+                "interactions", warnings,
+                "hasInteractions", !warnings.isEmpty()
+        );
     }
 
     public List<MedicineResponse> getMyMedicines(Long patientId) {
