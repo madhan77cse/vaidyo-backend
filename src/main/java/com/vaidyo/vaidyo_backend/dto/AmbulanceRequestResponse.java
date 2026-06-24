@@ -10,7 +10,7 @@ public class AmbulanceRequestResponse {
     private String pickupAddress;
     private Double pickupLatitude;
     private Double pickupLongitude;
-    private String notes;
+    private String notes;A
     private AmbulanceStatus status;
     private String partnerName;
     private String partnerPhoneNumber;

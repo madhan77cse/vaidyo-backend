@@ -33,8 +33,7 @@ public class MedicineController {
             @RequestParam Long patientId,
             @RequestBody MedicineRequest request) {
         try {
-            MedicineResponse response =
-                    medicineService.addMedicine(patientId, request);
+            MedicineResponse response = medicineService.addMedicine(patientId, request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -45,8 +44,7 @@ public class MedicineController {
     public ResponseEntity<?> getMyMedicines(
             @RequestParam Long patientId) {
         try {
-            List<MedicineResponse> medicines =
-                    medicineService.getMyMedicines(patientId);
+            List<MedicineResponse> medicines = medicineService.getMyMedicines(patientId);
             return ResponseEntity.ok(medicines);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -58,8 +56,7 @@ public class MedicineController {
             @PathVariable Long id,
             @RequestParam Long patientId) {
         try {
-            String result =
-                    medicineService.markAsTaken(id, patientId);
+            String result = medicineService.markAsTaken(id, patientId);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -71,8 +68,7 @@ public class MedicineController {
     public ResponseEntity<?> getMedicineLogs(
             @RequestParam Long patientId) {
         try {
-            List<MedicineLog> logs =
-                    medicineService.getMedicineLogs(patientId);
+            List<MedicineLog> logs = medicineService.getMedicineLogs(patientId);
             return ResponseEntity.ok(logs);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -99,8 +95,7 @@ public class MedicineController {
             File dir = new File(uploadDir);
             if (!dir.exists()) dir.mkdirs();
 
-            String fileName = UUID.randomUUID()
-                    + "_" + file.getOriginalFilename();
+            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
             Path filePath = Paths.get(uploadDir + fileName);
             Files.write(filePath, file.getBytes());
 
@@ -109,8 +104,7 @@ public class MedicineController {
 
             return ResponseEntity.ok("Photo uploaded: " + photoUrl);
         } catch (IOException e) {
-            return ResponseEntity.badRequest()
-                    .body("Upload failed: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Upload failed: " + e.getMessage());
         }
     }
 }
