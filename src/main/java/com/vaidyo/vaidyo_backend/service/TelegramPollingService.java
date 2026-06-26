@@ -15,6 +15,7 @@ public class TelegramPollingService {
 
     private final TelegramLinkService telegramLinkService;
     private final TelegramService telegramService;
+    private final TelegramDoseService telegramDoseService;
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -25,12 +26,13 @@ public class TelegramPollingService {
 
     public TelegramPollingService(
             TelegramLinkService telegramLinkService,
-            TelegramService telegramService) {
+            TelegramService telegramService,
+            TelegramDoseService telegramDoseService) {
         this.telegramLinkService = telegramLinkService;
         this.telegramService = telegramService;
+        this.telegramDoseService = telegramDoseService;
     }
 
-    // ── Poll Telegram every 3 seconds ─────────────────────────
     @Scheduled(fixedRate = 3000)
     public void pollUpdates() {
         try {
@@ -67,7 +69,6 @@ public class TelegramPollingService {
         }
     }
 
-    // ── Handle incoming message ────────────────────────────────
     private void handleMessage(String chatId, String text) {
 
         // Handle /start command
@@ -99,9 +100,29 @@ public class TelegramPollingService {
             return;
         }
 
+        // ── Handle "yes" reply → mark dose taken ──────────────
+        if (text.equalsIgnoreCase("yes")
+                || text.equalsIgnoreCase("taken")
+                || text.equalsIgnoreCase("done")) {
+            boolean marked = telegramDoseService.markLatestDoseTaken(chatId);
+            if (marked) {
+                telegramService.sendMessage(chatId,
+                        "✅ <b>Dose marked as taken!</b>\n\n"
+                                + "Great job staying on track with your medication. 💪");
+            } else {
+                telegramService.sendMessage(chatId,
+                        "⚠️ No pending dose found to mark as taken.\n"
+                                + "If you think this is an error, "
+                                + "please check the Vaidyo app.");
+            }
+            return;
+        }
+
         // Handle anything else
         telegramService.sendMessage(chatId,
                 "Please send your <b>6-digit link code</b> "
-                        + "from the Vaidyo app.");
+                        + "from the Vaidyo app.\n\n"
+                        + "Or reply <b>yes</b> after taking your medicine "
+                        + "to mark your dose as taken. ✅");
     }
 }

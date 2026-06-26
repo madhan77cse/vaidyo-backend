@@ -13,6 +13,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByMobileNumber(String mobileNumber);
 
-    // ── New ──────────────────────────────────────────────────
     long countByRole(User.Role role);
+
+    Optional<User> findByTelegramChatId(String telegramChatId);
 }
