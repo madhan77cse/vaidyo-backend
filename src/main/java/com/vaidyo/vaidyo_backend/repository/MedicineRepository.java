@@ -4,10 +4,7 @@ import com.vaidyo.vaidyo_backend.entity.Medicine;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-<<<<<<< HEAD
-=======
 import java.time.LocalDate;
->>>>>>> ea6533cf9990bb8976b137e975efd94762a22b32
 import java.util.List;
 
 @Repository
@@ -17,9 +14,6 @@ public interface MedicineRepository extends JpaRepository<Medicine, Long> {
 
     List<Medicine> findByPatientIdAndStatus(
             Long patientId, Medicine.MedicineStatus status);
-<<<<<<< HEAD
-=======
 
     List<Medicine> findByExpiryDateBetween(LocalDate start, LocalDate end);
->>>>>>> ea6533cf9990bb8976b137e975efd94762a22b32
 }
