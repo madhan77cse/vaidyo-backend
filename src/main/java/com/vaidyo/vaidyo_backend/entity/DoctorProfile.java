@@ -38,17 +38,25 @@ public class DoctorProfile {
     @Column(name = "bio", columnDefinition = "TEXT")
     private String bio;
 
+    // ── NEW: qualifications e.g. "MBBS, MD - Cardiology, AIIMS Delhi" ──
+    @Column(name = "qualifications", columnDefinition = "TEXT")
+    private String qualifications;
+
+    // ── NEW: Cloudinary profile photo URL ──
+    @Column(name = "profile_photo_url", length = 500)
+    private String profilePhotoUrl;
+
+    // ── Already exists in your project (confirmed from DoctorService) ──
+    @Column(name = "certificate_url", length = 500)
+    private String certificateUrl;
+
+    // ── Already exists in your project ──
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "verification_status", length = 20)
     private VerificationStatus verificationStatus = VerificationStatus.PENDING;
-
-    // ── New fields ──────────────────────────────────────────────
-    @Column(name = "certificate_url", columnDefinition = "TEXT")
-    private String certificateUrl;
-
-    @Column(name = "rejection_reason", columnDefinition = "TEXT")
-    private String rejectionReason;
-    // ───────────────────────────────────────────────────────────
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -64,9 +72,11 @@ public class DoctorProfile {
     public Double getConsultationFee() { return consultationFee; }
     public String getClinicAddress() { return clinicAddress; }
     public String getBio() { return bio; }
-    public VerificationStatus getVerificationStatus() { return verificationStatus; }
+    public String getQualifications() { return qualifications; }
+    public String getProfilePhotoUrl() { return profilePhotoUrl; }
     public String getCertificateUrl() { return certificateUrl; }
     public String getRejectionReason() { return rejectionReason; }
+    public VerificationStatus getVerificationStatus() { return verificationStatus; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
     public void setId(Long id) { this.id = id; }
@@ -77,14 +87,18 @@ public class DoctorProfile {
     public void setConsultationFee(Double consultationFee) { this.consultationFee = consultationFee; }
     public void setClinicAddress(String clinicAddress) { this.clinicAddress = clinicAddress; }
     public void setBio(String bio) { this.bio = bio; }
-    public void setVerificationStatus(VerificationStatus verificationStatus) { this.verificationStatus = verificationStatus; }
+    public void setQualifications(String qualifications) { this.qualifications = qualifications; }
+    public void setProfilePhotoUrl(String profilePhotoUrl) { this.profilePhotoUrl = profilePhotoUrl; }
     public void setCertificateUrl(String certificateUrl) { this.certificateUrl = certificateUrl; }
     public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
+    public void setVerificationStatus(VerificationStatus verificationStatus) { this.verificationStatus = verificationStatus; }
 
     public enum Speciality {
         GENERAL, CARDIOLOGY, ORTHOPEDICS, DIABETOLOGY,
         NEUROLOGY, DERMATOLOGY, ENT, OPHTHALMOLOGY,
-        GYNECOLOGY, PEDIATRICS, PSYCHIATRY, UROLOGY
+        GYNECOLOGY, PEDIATRICS, PSYCHIATRY, UROLOGY,
+        DENTAL, PHYSIOTHERAPY, GERIATRICS
+        // Add more here anytime — no other code needs to change
     }
 
     public enum VerificationStatus {

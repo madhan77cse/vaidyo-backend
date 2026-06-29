@@ -2,6 +2,7 @@ package com.vaidyo.vaidyo_backend.dto;
 
 public class DoctorSearchResponse {
 
+    // ── Existing fields ──
     private Long userId;
     private String fullName;
     private String speciality;
@@ -12,7 +13,14 @@ public class DoctorSearchResponse {
     private String bio;
     private String verificationStatus;
 
-    // ── Getters ────────────────────────────────────────────────
+    // ── NEW fields ──
+    private String qualifications;
+    private String profilePhotoUrl;
+    private Double averageRating;
+    private Long totalRatings;
+
+    public DoctorSearchResponse() {}
+
     public Long getUserId() { return userId; }
     public String getFullName() { return fullName; }
     public String getSpeciality() { return speciality; }
@@ -22,8 +30,11 @@ public class DoctorSearchResponse {
     public String getClinicAddress() { return clinicAddress; }
     public String getBio() { return bio; }
     public String getVerificationStatus() { return verificationStatus; }
+    public String getQualifications() { return qualifications; }
+    public String getProfilePhotoUrl() { return profilePhotoUrl; }
+    public Double getAverageRating() { return averageRating; }
+    public Long getTotalRatings() { return totalRatings; }
 
-    // ── Setters ────────────────────────────────────────────────
     public void setUserId(Long userId) { this.userId = userId; }
     public void setFullName(String fullName) { this.fullName = fullName; }
     public void setSpeciality(String speciality) { this.speciality = speciality; }
@@ -33,4 +44,8 @@ public class DoctorSearchResponse {
     public void setClinicAddress(String clinicAddress) { this.clinicAddress = clinicAddress; }
     public void setBio(String bio) { this.bio = bio; }
     public void setVerificationStatus(String verificationStatus) { this.verificationStatus = verificationStatus; }
+    public void setQualifications(String qualifications) { this.qualifications = qualifications; }
+    public void setProfilePhotoUrl(String profilePhotoUrl) { this.profilePhotoUrl = profilePhotoUrl; }
+    public void setAverageRating(Double averageRating) { this.averageRating = averageRating; }
+    public void setTotalRatings(Long totalRatings) { this.totalRatings = totalRatings; }
 }
