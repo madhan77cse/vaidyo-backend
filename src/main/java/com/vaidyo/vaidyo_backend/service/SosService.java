@@ -20,13 +20,16 @@ public class SosService {
     private final EmergencyContactRepository emergencyContactRepository;
     private final UserRepository userRepository;
     private final TelegramService telegramService;
+    private final MessageService messageService;
 
     public SosService(EmergencyContactRepository emergencyContactRepository,
                       UserRepository userRepository,
-                      TelegramService telegramService) {
+                      TelegramService telegramService,
+                      MessageService messageService) {
         this.emergencyContactRepository = emergencyContactRepository;
         this.userRepository = userRepository;
         this.telegramService = telegramService;
+        this.messageService = messageService;
     }
 
     private User getCurrentPatient(Authentication authentication) {
@@ -48,7 +51,11 @@ public class SosService {
         }
 
         String locationLink = buildLocationLink(request.getLatitude(), request.getLongitude());
-        String alertMessage = buildAlertMessage(patient.getFullName(), locationLink);
+        String lang = patient.getPreferredLanguage();
+
+        String title = messageService.get("sos.alert.title", lang);
+        String body = messageService.get("sos.alert.body", lang, patient.getFullName(), locationLink);
+        String alertMessage = "<b>" + title + "</b>\n\n" + body;
 
         List<String> notified = new ArrayList<>();
         List<SosResponse.UnlinkedContact> toCallManually = new ArrayList<>();
@@ -75,12 +82,5 @@ public class SosService {
 
     private String buildLocationLink(Double latitude, Double longitude) {
         return "https://www.google.com/maps?q=" + latitude + "," + longitude;
-    }
-
-    private String buildAlertMessage(String patientName, String locationLink) {
-        return "🚨 <b>EMERGENCY SOS</b> 🚨\n\n"
-                + "<b>" + patientName + "</b> needs immediate help!\n\n"
-                + "📍 Live location: " + locationLink + "\n\n"
-                + "Please contact them or send help right away.";
     }
 }

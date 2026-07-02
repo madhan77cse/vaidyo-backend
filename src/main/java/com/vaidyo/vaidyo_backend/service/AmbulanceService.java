@@ -29,8 +29,8 @@ public class AmbulanceService {
     private final AmbulancePartnerRepository ambulancePartnerRepository;
     private final UserRepository userRepository;
     private final TelegramService telegramService;
+    private final MessageService messageService;
 
-    // Legal manual transitions a patient is allowed to trigger from a given status
     private static final Map<AmbulanceStatus, Set<AmbulanceStatus>> ALLOWED_TRANSITIONS = Map.of(
             AmbulanceStatus.REQUESTED, EnumSet.of(AmbulanceStatus.CANCELLED),
             AmbulanceStatus.ASSIGNED, EnumSet.of(AmbulanceStatus.ARRIVED, AmbulanceStatus.CANCELLED),
@@ -40,11 +40,13 @@ public class AmbulanceService {
     public AmbulanceService(AmbulanceRequestRepository ambulanceRequestRepository,
                             AmbulancePartnerRepository ambulancePartnerRepository,
                             UserRepository userRepository,
-                            TelegramService telegramService) {
+                            TelegramService telegramService,
+                            MessageService messageService) {
         this.ambulanceRequestRepository = ambulanceRequestRepository;
         this.ambulancePartnerRepository = ambulancePartnerRepository;
         this.userRepository = userRepository;
         this.telegramService = telegramService;
+        this.messageService = messageService;
     }
 
     private User getCurrentPatient(Authentication authentication) {
@@ -56,7 +58,8 @@ public class AmbulanceService {
     // ── Patient-facing ──────────────────────────────────────────
 
     @Transactional
-    public AmbulanceRequestResponse requestAmbulance(Authentication authentication, AmbulanceRequestCreate request) {
+    public AmbulanceRequestResponse requestAmbulance(Authentication authentication,
+                                                     AmbulanceRequestCreate request) {
         User patient = getCurrentPatient(authentication);
 
         AmbulanceRequest ambulanceRequest = new AmbulanceRequest();
@@ -76,7 +79,8 @@ public class AmbulanceService {
     @Transactional(readOnly = true)
     public List<AmbulanceRequestResponse> getMyRequests(Authentication authentication) {
         User patient = getCurrentPatient(authentication);
-        return ambulanceRequestRepository.findByPatient_IdOrderByRequestedAtDesc(patient.getId())
+        return ambulanceRequestRepository
+                .findByPatient_IdOrderByRequestedAtDesc(patient.getId())
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -92,7 +96,8 @@ public class AmbulanceService {
     }
 
     @Transactional
-    public AmbulanceRequestResponse updateStatus(Authentication authentication, Long requestId,
+    public AmbulanceRequestResponse updateStatus(Authentication authentication,
+                                                 Long requestId,
                                                  AmbulanceStatus newStatus) {
         User patient = getCurrentPatient(authentication);
         AmbulanceRequest ambulanceRequest = ambulanceRequestRepository
@@ -100,7 +105,8 @@ public class AmbulanceService {
                 .orElseThrow(() -> new RuntimeException("Ambulance request not found"));
 
         AmbulanceStatus currentStatus = ambulanceRequest.getStatus();
-        Set<AmbulanceStatus> allowedNext = ALLOWED_TRANSITIONS.getOrDefault(currentStatus, Set.of());
+        Set<AmbulanceStatus> allowedNext =
+                ALLOWED_TRANSITIONS.getOrDefault(currentStatus, Set.of());
 
         if (!allowedNext.contains(newStatus)) {
             throw new IllegalStateException(
@@ -113,7 +119,8 @@ public class AmbulanceService {
             ambulanceRequest.setCompletedAt(LocalDateTime.now());
             freePartner(ambulanceRequest);
 
-            if (newStatus == AmbulanceStatus.CANCELLED && ambulanceRequest.getAssignedPartner() != null) {
+            if (newStatus == AmbulanceStatus.CANCELLED
+                    && ambulanceRequest.getAssignedPartner() != null) {
                 notifyPartnerOfCancellation(ambulanceRequest);
             }
         }
@@ -122,7 +129,7 @@ public class AmbulanceService {
         return toResponse(saved);
     }
 
-    // ── Admin-facing (ambulance partner registry) ───────────────
+    // ── Admin-facing ────────────────────────────────────────────
 
     @Transactional
     public AmbulancePartnerResponse createPartner(AmbulancePartnerRequest request) {
@@ -166,14 +173,23 @@ public class AmbulanceService {
             ambulanceRequest.setAssignedPartner(partner);
             ambulanceRequest.setStatus(AmbulanceStatus.ASSIGNED);
 
-            if (partner.getTelegramChatId() != null && !partner.getTelegramChatId().isBlank()) {
+            if (partner.getTelegramChatId() != null
+                    && !partner.getTelegramChatId().isBlank()) {
+                String lang = patient.getPreferredLanguage();
                 String locationLink = buildLocationLink(
-                        ambulanceRequest.getPickupLatitude(), ambulanceRequest.getPickupLongitude());
-                String message = "🚑 <b>New Ambulance Request</b>\n\n"
-                        + "Patient: <b>" + patient.getFullName() + "</b>\n"
-                        + "Pickup: " + ambulanceRequest.getPickupAddress() + "\n"
-                        + "📍 Location: " + locationLink
-                        + (ambulanceRequest.getNotes() != null ? "\n\nNote: " + ambulanceRequest.getNotes() : "");
+                        ambulanceRequest.getPickupLatitude(),
+                        ambulanceRequest.getPickupLongitude());
+
+                String title = messageService.get("ambulance.assigned.title", lang);
+                String body = messageService.get("ambulance.assigned.body", lang,
+                        patient.getFullName(),
+                        ambulanceRequest.getPickupAddress(),
+                        locationLink);
+
+                String message = "<b>" + title + "</b>\n\n" + body
+                        + (ambulanceRequest.getNotes() != null
+                        ? "\n\nNote: " + ambulanceRequest.getNotes() : "");
+
                 telegramService.sendMessage(partner.getTelegramChatId(), message);
             }
         });
@@ -189,10 +205,13 @@ public class AmbulanceService {
 
     private void notifyPartnerOfCancellation(AmbulanceRequest ambulanceRequest) {
         AmbulancePartner partner = ambulanceRequest.getAssignedPartner();
-        if (partner != null && partner.getTelegramChatId() != null && !partner.getTelegramChatId().isBlank()) {
-            String message = "❌ <b>Ambulance Request Cancelled</b>\n\n"
-                    + "The request for pickup at " + ambulanceRequest.getPickupAddress()
-                    + " has been cancelled by the patient.";
+        if (partner != null && partner.getTelegramChatId() != null
+                && !partner.getTelegramChatId().isBlank()) {
+            String lang = ambulanceRequest.getPatient().getPreferredLanguage();
+            String title = messageService.get("ambulance.cancelled.title", lang);
+            String body = messageService.get("ambulance.cancelled.body", lang,
+                    ambulanceRequest.getPickupAddress());
+            String message = "<b>" + title + "</b>\n\n" + body;
             telegramService.sendMessage(partner.getTelegramChatId(), message);
         }
     }
@@ -233,8 +252,13 @@ public class AmbulanceService {
 
     private AmbulancePartnerResponse toPartnerResponse(AmbulancePartner p) {
         return new AmbulancePartnerResponse(
-                p.getId(), p.getPartnerName(), p.getPhoneNumber(), p.getVehicleNumber(),
-                p.isAvailable(), p.getBaseLatitude(), p.getBaseLongitude()
+                p.getId(),
+                p.getPartnerName(),
+                p.getPhoneNumber(),
+                p.getVehicleNumber(),
+                p.isAvailable(),
+                p.getBaseLatitude(),
+                p.getBaseLongitude()
         );
     }
 }
