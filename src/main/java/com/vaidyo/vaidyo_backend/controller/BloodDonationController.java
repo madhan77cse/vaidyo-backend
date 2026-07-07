@@ -48,11 +48,8 @@ public class BloodDonationController {
     @GetMapping("/blood-donor/search")
     public ResponseEntity<List<BloodDonorProfileResponse>> searchDonors(
             @RequestParam(required = false) String bloodGroup,
-            @RequestParam(required = false) Double latitude,
-            @RequestParam(required = false) Double longitude,
-            @RequestParam(required = false) Double radiusKm) {
-        return ResponseEntity.ok(
-                bloodDonationService.searchDonors(bloodGroup, latitude, longitude, radiusKm));
+            @RequestParam(required = false) String location) {
+        return ResponseEntity.ok(bloodDonationService.searchDonors(bloodGroup, location));
     }
 
     // ── Blood requests (needs) ───────────────────────────────────

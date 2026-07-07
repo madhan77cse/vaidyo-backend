@@ -88,24 +88,15 @@ public class BloodDonationService {
     // ── Donor search ─────────────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public List<BloodDonorProfileResponse> searchDonors(String bloodGroup, Double latitude,
-                                                        Double longitude, Double radiusKm) {
-        List<BloodDonorProfile> candidates = (bloodGroup != null && !bloodGroup.isBlank())
-                ? donorProfileRepository.findByAvailableTrueAndBloodGroup(bloodGroup)
-                : donorProfileRepository.findByAvailableTrue();
+    public List<BloodDonorProfileResponse> searchDonors(String bloodGroup, String location) {
+        List<BloodDonorProfile> candidates =
+                donorProfileRepository.searchDonors(
+                        (bloodGroup != null && !bloodGroup.isBlank()) ? bloodGroup : null,
+                        (location != null && !location.isBlank()) ? location : null
+                );
 
         return candidates.stream()
-                .map(profile -> {
-                    Double distance = (latitude != null && longitude != null)
-                            ? GeoUtils.distanceKm(latitude, longitude, profile.getLatitude(), profile.getLongitude())
-                            : null;
-                    return toProfileResponse(profile, profile.getUser().getFullName(), distance);
-                })
-                .filter(response -> radiusKm == null || response.getDistanceKm() == null
-                        || response.getDistanceKm() <= radiusKm)
-                .sorted(Comparator.comparing(
-                        BloodDonorProfileResponse::getDistanceKm,
-                        Comparator.nullsLast(Comparator.naturalOrder())))
+                .map(profile -> toProfileResponse(profile, profile.getUser().getFullName(), null))
                 .collect(Collectors.toList());
     }
 
