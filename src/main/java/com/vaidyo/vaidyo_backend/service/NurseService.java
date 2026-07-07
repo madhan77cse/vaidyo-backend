@@ -1,4 +1,3 @@
-
 package com.vaidyo.vaidyo_backend.service;
 
 import com.vaidyo.vaidyo_backend.dto.NurseProfileRequest;
@@ -25,18 +24,21 @@ public class NurseService {
         this.userRepository = userRepository;
     }
 
-    // ── Nurse submits their profile after registering with role=NURSE ──
+    // ── Nurse submits profile ──────────────────────────────────
     @Transactional
-    public NurseProfileResponse submitProfile(Long userId, NurseProfileRequest request) {
+    public NurseProfileResponse submitProfile(Long userId,
+                                              NurseProfileRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (user.getRole() != User.Role.NURSE) {
-            throw new RuntimeException("Only users registered as NURSE can submit a nurse profile");
+            throw new RuntimeException(
+                    "Only users registered as NURSE can submit a nurse profile");
         }
 
         if (nurseProfileRepository.findByUserId(userId).isPresent()) {
-            throw new RuntimeException("Nurse profile already submitted for this user");
+            throw new RuntimeException(
+                    "Nurse profile already submitted for this user");
         }
 
         NurseProfile profile = new NurseProfile();
@@ -53,7 +55,7 @@ public class NurseService {
         return new NurseProfileResponse(saved);
     }
 
-    // ── Nurse views their own profile/status ──
+    // ── Nurse views own profile ────────────────────────────────
     @Transactional
     public NurseProfileResponse getMyProfile(Long userId) {
         NurseProfile profile = nurseProfileRepository.findByUserId(userId)
@@ -61,30 +63,53 @@ public class NurseService {
         return new NurseProfileResponse(profile);
     }
 
-    // ── Patients/Teammate-2 admin UI: list approved nurses ──
+    // ── Get ALL nurses (all statuses) — for admin All tab ─────
     @Transactional
-    public List<NurseProfileResponse> getApprovedNurses() {
-        return nurseProfileRepository
-                .findByVerificationStatusOrderByCreatedAtDesc(NurseProfile.VerificationStatus.APPROVED)
+    public List<NurseProfileResponse> getAllNurses() {
+        return nurseProfileRepository.findAll()
                 .stream()
                 .map(NurseProfileResponse::new)
                 .collect(Collectors.toList());
     }
 
-    // ── Admin: list pending nurses for review ──
+    // ── Get PENDING nurses — for admin Pending tab ─────────────
     @Transactional
     public List<NurseProfileResponse> getPendingNurses() {
         return nurseProfileRepository
-                .findByVerificationStatusOrderByCreatedAtDesc(NurseProfile.VerificationStatus.PENDING)
+                .findByVerificationStatusOrderByCreatedAtDesc(
+                        NurseProfile.VerificationStatus.PENDING)
                 .stream()
                 .map(NurseProfileResponse::new)
                 .collect(Collectors.toList());
     }
 
-    // ── Admin: approve ──
+    // ── Get APPROVED nurses — for admin Approved tab ───────────
+    @Transactional
+    public List<NurseProfileResponse> getApprovedNurses() {
+        return nurseProfileRepository
+                .findByVerificationStatusOrderByCreatedAtDesc(
+                        NurseProfile.VerificationStatus.APPROVED)
+                .stream()
+                .map(NurseProfileResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    // ── Get REJECTED nurses — for admin Rejected tab ───────────
+    @Transactional
+    public List<NurseProfileResponse> getRejectedNurses() {
+        return nurseProfileRepository
+                .findByVerificationStatusOrderByCreatedAtDesc(
+                        NurseProfile.VerificationStatus.REJECTED)
+                .stream()
+                .map(NurseProfileResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    // ── Admin approves nurse ───────────────────────────────────
     @Transactional
     public NurseProfileResponse approveNurse(Long nurseProfileId) {
-        NurseProfile profile = nurseProfileRepository.findById(nurseProfileId)
+        NurseProfile profile = nurseProfileRepository
+                .findById(nurseProfileId)
                 .orElseThrow(() -> new RuntimeException("Nurse profile not found"));
         profile.setVerificationStatus(NurseProfile.VerificationStatus.APPROVED);
         profile.setRejectionReason(null);
@@ -92,10 +117,11 @@ public class NurseService {
         return new NurseProfileResponse(saved);
     }
 
-    // ── Admin: reject ──
+    // ── Admin rejects nurse ────────────────────────────────────
     @Transactional
     public NurseProfileResponse rejectNurse(Long nurseProfileId, String reason) {
-        NurseProfile profile = nurseProfileRepository.findById(nurseProfileId)
+        NurseProfile profile = nurseProfileRepository
+                .findById(nurseProfileId)
                 .orElseThrow(() -> new RuntimeException("Nurse profile not found"));
         profile.setVerificationStatus(NurseProfile.VerificationStatus.REJECTED);
         profile.setRejectionReason(reason);
