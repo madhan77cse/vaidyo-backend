@@ -42,7 +42,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 request.getHeader("Authorization");
 
         System.out.println("🔐 Auth header: " + authHeader);
-
+        response.setHeader("X-Debug-Auth-Received", authHeader != null ? "yes" : "no");
         if (authHeader == null ||
                 !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -118,6 +118,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             System.out.println("💥 Error: " + e.getMessage());
+            response.setHeader("X-Debug-Error", e.getClass().getSimpleName() + ": " + e.getMessage());
         }
 
         filterChain.doFilter(request, response);
