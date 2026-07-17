@@ -19,7 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity  // ← enables @PreAuthorize on controllers
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
@@ -45,12 +45,10 @@ public class SecurityConfig {
                                 org.springframework.http.HttpMethod.OPTIONS,
                                 "/**"
                         ).permitAll()
-                        // admin login is public
                         .requestMatchers(
                                 "/api/admin/auth/login",
                                 "/api/admin/auth/health"
                         ).permitAll()
-                        // everything else under /api/admin/** needs ADMIN role
                         .anyRequest().hasRole("ADMIN")
                 )
                 .sessionManagement(session -> session
@@ -72,7 +70,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // ── Allow CORS preflight requests ──────
+                        // ── Allow CORS preflight ───────────────
                         .requestMatchers(
                                 org.springframework.http.HttpMethod.OPTIONS,
                                 "/**"
@@ -86,13 +84,20 @@ public class SecurityConfig {
                                 "/api/telegram/generate/**",
                                 "/api/telegram/status/**"
                         ).permitAll()
-                        // ── Role protected endpoints ───────────
-                        .requestMatchers("/api/patient/**")
-                        .hasRole("PATIENT")
+                        // ── Patient endpoints ──────────────────
+                        .requestMatchers(
+                                "/api/patient/**",
+                                "/api/food-recommendation",   // ✅ fixed
+                                "/api/symptom-checker",       // ✅ fixed
+                                "/api/report-reader"          // ✅ fixed
+                        ).hasRole("PATIENT")
+                        // ── Doctor endpoints ───────────────────
                         .requestMatchers("/api/doctor/**")
                         .hasRole("DOCTOR")
+                        // ── Caretaker endpoints ────────────────
                         .requestMatchers("/api/caretaker/**")
                         .hasRole("CARETAKER")
+                        // ── Nurse endpoints ────────────────────
                         .requestMatchers("/api/nurse/**")
                         .hasRole("NURSE")
                         // ── Everything else needs login ─────────
